@@ -12,18 +12,8 @@ order = {'C': 'corner','K': 'center', 'K-K': 'edge', 'K-E': 'common', 'E': 'cent
 
 player_moves = player = computer = ''
 
+# flag for restart game
 player_first = flag = True
-
-def print_board():
-    x = 1
-    for i in board:
-        char = ' '
-        end = " | "
-        if x % 3 == 0: end = " \n----------\n"
-        if x == 9: end = ''
-        if i in ('X', 'O'): char = i
-        x += 1
-        print(char, end=end)
 
 def select_nut():
     while 1:
@@ -39,8 +29,34 @@ def ask_player(word):
         elif choose in ('N', 'n'): return False
         else: print("invalid Input. ")
 
+def print_board():
+    x = 1
+    for i in board:
+        char = ' '
+        end = " | "
+        if x % 3 == 0: end = " \n----------\n"
+        if x == 9: end = ''
+        if i in ('X', 'O'): char = i
+        x += 1
+        print(char, end=end)
+
 def space_exist():
     return (board.count('X') + board.count('O') != 9)
+
+#daryaft noghte harkate karbar
+def player_move():
+    while 1:
+        move = input("\nYour move [1,9] :  ")
+        if move not in ('1', '2', '3', '4', '5', '6', '7', '8', '9'):
+            print("Invalid input. ")
+            continue
+
+        move = int(move)-1
+        if can_move(move):
+            submit_player_move(move)
+            return make_move(move, player, has_player_won(move))
+        else:
+            print("Thats Not Empty.")
 
 def can_move(move):
     if board[move] not in ('X', 'O'): return True
@@ -56,79 +72,47 @@ def submit_player_move(move):
     else: current = 'C'
     player_moves +=  divider + current
 
-def find_common_point():
-    points = [i for i in range(9) if board[i] == player]
-    states = [[],[]]
+#sabte harkat dar board
+def make_move(move, player_or_pc, has_win):
+    global board
+    board[move] = player_or_pc
+    if has_win == True:
+        return "WIN"
+    else:
+        return False
 
-    for i in range(2):
-        point = points[i]
-        for state in winners:
-            if point in state:
-                acceptable = True
-                for j in state:
-                    if board[j] == computer:
-                        acceptable = False
-                if acceptable:
-                    states[i] += list(state)
-
-    common_point = list(set(states[0]).intersection(set(states[1])))
-    if common_point == []: return None
-    return common_point[0]
-
-def can_win(player):
-    places = [i for i in board if i not in ('X', 'O')]
-
-    for i in places:
-        board[i] = player
-        for state in winners:
-            win = True
-            for j in state:
-                if board[j] != player:
-                    win = False
-                    break
-            if win:
-                return (True, i)
-        board[i] = i
-
-    return(False, -1)
-
-def desired_move(domain = board):
+#baresi halat bord karbar
+def has_player_won(move):
+    board[move] = player
+    # state = halate barande
     for state in winners:
-        can_go = False
-        positions = []
+        win = True
         for j in state:
-            if board[j] == player:
-                can_go = False
+            if board[j] != player:
+                win = False
                 break
-            elif board[j] == computer:
-                can_go = True
-            else:
-                positions.append(j)
-
-        if can_go:
-            points = [i for i in positions if i in domain]
-            if len(points) > 0:
-                return points[randrange(len(positions))]
-
-    places = [i for i in board if i not in ('X', 'O')]
-    return places[randrange(len(places))]
+        if win:
+            return True
+    return False
 
 def computer_move():
     if player_first:
         if  player_moves in order:
-
+            #baresi harekat karbar
             move_type = order[player_moves]
 
             if move_type == 'center':
                 return make_move(4, computer, False)
 
             elif move_type == 'corner':
+                #gozshtn harekat random
                 move = corner[randrange(4)]
                 return make_move(move, computer, False)
 
             elif move_type == 'edge':
                     winning = can_win(player)
                     if winning[0]:
+                        #gozshtn karekat counter
                         return make_move(winning[1], computer, False)
                     return make_move(desired_move(edge), computer, False)
 
@@ -139,7 +123,8 @@ def computer_move():
                 point = find_common_point()
                 if point != None:
                     return make_move(point, computer, False)
-    
+
+    #shomaresh tedad mohre hai pc  
     if board.count(computer) == 0:
         moves = (0, 2, 4, 6, 8)
         while 1:
@@ -158,36 +143,71 @@ def computer_move():
     else:
         return make_move(desired_move(), computer, False)
 
-def has_player_won(move):
-    board[move] = player
+def can_win(player_or_pc):
+    #peida krdn khone hai khali
+    places = [i for i in board if i not in ('X', 'O')]
+
+    for i in places:
+        board[i] = player_or_pc
+        for state in winners:
+            win = True
+            for j in state:
+                if board[j] != player_or_pc:
+                    win = False
+                    break
+            if win:
+                return (True, i)
+        board[i] = i
+
+    return(False, -1)
+
+#sakht halat barande b vasile pc
+def desired_move(domain = board):
     for state in winners:
-        win = True
+        can_go = False
+        positions = []
         for j in state:
-            if board[j] != player:
-                win = False
+            if board[j] == player:
+                can_go = False
                 break
-        if win:
-            return True
-    return False
+            elif board[j] == computer:
+                can_go = True
+            else:
+                #azafe karde b position
+                positions.append(j)
 
-def player_move():
-    while 1:
-        move = input("\nYour move [1,9] :  ")
-        if move not in ('1', '2', '3', '4', '5', '6', '7', '8', '9'):
-            print("Invalid input. ")
-            continue
+        if can_go:
+           #baresi mojaz bodn 2 khane khali 
+            points = [i for i in positions if i in domain]
+            if len(points) > 0:
+                return points[randrange(len(positions))]
 
-        move = int(move)-1
-        if can_move(move):
-            submit_player_move(move)
-            return make_move(move, player, has_player_won(move))
-        else:
-            print("Thats Not Empty.")
+    places = [i for i in board if i not in ('X', 'O')]
+    return places[randrange(len(places))]
 
-def make_move(move, player, has_win):
-    global board
-    board[move] = player
-    return "WIN" if has_win else False
+
+def find_common_point():
+    #peida kardm khone hai karbar
+    points = [i for i in range(9) if board[i] == player]
+    states = [[],[]] 
+
+    for i in range(2):
+        point = points[i]
+        for state in winners:
+            if point in state:
+                acceptable = True
+                for j in state:
+                    #hazf masir barande k noqte pc dar one
+                    if board[j] == computer:
+                        acceptable = False
+                if acceptable:
+                    states[i] += list(state)
+
+    #noqte eshterak 2 masir gerefte mishe 
+    #set : tabdil majmoe
+    common_point = list(set(states[0]).intersection(set(states[1])))
+    if common_point == []: return None
+    return common_point[0]
 
 while flag == True:
 
